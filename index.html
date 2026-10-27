@@ -88,6 +88,12 @@
         <button id="btnOpenOnboarding" onclick="openOnboardingModal()" class="tap-btn px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium" title="新手導覽與架構說明">
           📖 導覽
         </button>
+        <!-- 頂部三段語速快捷切換 (0.5x / 0.8x / 1.0x 移植自國際版) -->
+        <div id="headerSpeedGroup" class="hidden md:flex items-center gap-1 bg-white/10 px-1.5 py-1 rounded-lg text-[11px] font-bold">
+          <button type="button" onclick="setGlobalSpeechRate(0.5)" data-hspd="0.5" class="px-1.5 py-0.5 rounded hover:bg-white/20">🐢0.5x</button>
+          <button type="button" onclick="setGlobalSpeechRate(0.8)" data-hspd="0.8" class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950">🚶0.8x</button>
+          <button type="button" onclick="setGlobalSpeechRate(1.0)" data-hspd="1.0" class="px-1.5 py-0.5 rounded hover:bg-white/20">🏃1.0x</button>
+        </div>
         <button id="btnToggleRomajiGlobal" onclick="toggleGlobalRomaji()" class="tap-btn px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium" title="切換羅馬拼音輔助顯示">
           <span id="romajiStatusBadge">拼音：顯示</span>
         </button>
@@ -97,6 +103,27 @@
         <button id="btnOpenSettings" onclick="switchMainTab('settings')" class="tap-btn px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium" title="設定與字體大小">
           ⚙️
         </button>
+      </div>
+    </div>
+
+    <!-- 全域學習輔助圖層控制列 (移植自國際版：初學全開 vs 進階盲聽 + 5 大輔助開關 + 粵/國語諧音切換) -->
+    <div id="globalAidsToolbar" class="bg-[#112240] dark:bg-slate-950/90 border-t border-white/10 px-3 py-1.5 text-[11px]">
+      <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5">
+          <button type="button" id="presetBtnBeginner" onclick="applyAidPreset('beginner')" class="px-2.5 py-0.5 rounded-full font-bold bg-amber-400 text-slate-950 transition">🌱 初學全開</button>
+          <button type="button" id="presetBtnAdvanced" onclick="applyAidPreset('advanced')" class="px-2.5 py-0.5 rounded-full font-bold bg-white/10 text-slate-200 hover:bg-white/20 transition">🎓 進階挑戰</button>
+          <select id="selectPhoneticDialect" onchange="setPhoneticDialect(this.value)" class="ml-1 px-2 py-0.5 rounded bg-white/10 text-amber-300 font-bold border border-white/15 text-[11px]">
+            <option value="hk" class="text-slate-900">🗣️ 粵語諧音</option>
+            <option value="tw" class="text-slate-900">🗣️ 國語諧音</option>
+          </select>
+        </div>
+        <div class="flex flex-wrap items-center gap-2.5 text-slate-200">
+          <label class="inline-flex items-center gap-1 cursor-pointer select-none"><input type="checkbox" id="chkLayerRomaji" checked onchange="toggleAidLayer('romaji', this.checked)" class="accent-amber-400 rounded"><span>羅馬拼音</span></label>
+          <label class="inline-flex items-center gap-1 cursor-pointer select-none"><input type="checkbox" id="chkLayerNative" checked onchange="toggleAidLayer('native', this.checked)" class="accent-amber-400 rounded"><span>中文諧音</span></label>
+          <label class="inline-flex items-center gap-1 cursor-pointer select-none"><input type="checkbox" id="chkLayerHira" checked onchange="toggleAidLayer('hira', this.checked)" class="accent-amber-400 rounded"><span>假名標音</span></label>
+          <label class="inline-flex items-center gap-1 cursor-pointer select-none"><input type="checkbox" id="chkLayerTrans" checked onchange="toggleAidLayer('trans', this.checked)" class="accent-amber-400 rounded"><span>中文翻譯</span></label>
+          <label class="inline-flex items-center gap-1 cursor-pointer select-none"><input type="checkbox" id="chkLayerNotes" checked onchange="toggleAidLayer('notes', this.checked)" class="accent-amber-400 rounded"><span>文法解析</span></label>
+        </div>
       </div>
     </div>
 
@@ -285,7 +312,7 @@
                 • <b>手寫：</b>採用<b>「自我練習＋筆畫數與九宮格覆蓋率近似比對模式」</b>，不偽裝為雲端 AI OCR。
               </p>
             </div>
-            <button id="btnTestAudioHome" onclick="speakJapaneseText('こんにちは。日本語を一歩ずつ勉強しましょう。', false)" class="tap-btn w-full py-2 px-3 rounded-xl bg-[#1B365D] text-white font-semibold text-xs hover:opacity-95">
+            <button id="btnTestAudioHome" onclick="event.stopPropagation(); speakJapaneseText('こんにちは。日本語を一歩ずつ勉強しましょう。', false)" class="tap-btn w-full py-2 px-3 rounded-xl bg-[#1B365D] text-white font-semibold text-xs hover:opacity-95">
               🔊 點擊測試日語發音 (こんにちは)
             </button>
           </div>
@@ -395,7 +422,17 @@
             </button>
           </div>
           <div class="flex flex-col sm:flex-row gap-2">
-            <input id="inputCustomNumber" type="number" min="0" max="99999999" value="3800" oninput="updateCustomNumberConverter()" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold w-full sm:w-48" placeholder="輸入阿拉伯數字" />
+            <input id="inputCustomNumber" type="text" value="3800" oninput="updateCustomNumberConverter()" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold w-full sm:w-44" placeholder="例如：3800, 14:30, 2026" />
+            <select id="selectNumberContext" onchange="updateCustomNumberConverter()" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-xs sm:text-sm font-bold">
+              <option value="yen">💴 日圓金額 (3800 → 3,800円)</option>
+              <option value="count">🔢 一般數字／小數 (21.5 / -5)</option>
+              <option value="time">🕒 時間 HH:MM (14:30 / 9:01)</option>
+              <option value="year">📅 年份 (2026 → 2026年)</option>
+              <option value="date">📆 日期幾號 (1〜31 → 1日〜31日特殊讀法)</option>
+              <option value="age">🎂 年齡歲數 (20 → 二十歳 はたち)</option>
+              <option value="floor">🏢 樓層 (1〜10 → 1階 いっかい／3階 さんがい)</option>
+              <option value="phone">📞 電話號碼逐位讀 (090-1234)</option>
+            </select>
             <div id="customNumberResultBox" class="flex-1 p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
               <!-- Populated by JS -->
             </div>
@@ -429,6 +466,15 @@
               <!-- Populated by JS -->
             </select>
           </div>
+        </div>
+
+        <!-- 會話子分頁：13課情境會話 vs 日語核心文法總表 + L1~L13 快速跳課膠囊 (移植自國際版) -->
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800 gap-1">
+            <button type="button" id="btnConvSubDlg" onclick="switchConvViewSubTab('dlg')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#1B365D] text-white">💬 13 課情境會話</button>
+            <button type="button" id="btnConvSubGram" onclick="switchConvViewSubTab('gram')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300">📐 日語核心文法總表</button>
+          </div>
+          <div id="convQuickPillsBar" class="flex flex-wrap gap-1"></div>
         </div>
 
         <!-- Conversation Detail Container -->
@@ -849,45 +895,314 @@
       showToast('已設定每日學習提醒時間為 ' + val);
     }
 
-    // Speech Synthesis (Native TTS with Japanese voice detection & error fallback)
-    function checkTtsSupport() {
-      const label = document.getElementById('ttsStatusLabel');
-      if (!label) return;
-      if ('speechSynthesis' in window) {
-        const voices = window.speechSynthesis.getVoices();
-        const jpVoice = voices.find(v => v.lang && v.lang.toLowerCase().includes('ja'));
-        if (jpVoice) {
-          label.textContent = '✅ 已就緒（系統原生東京標準音 TTS：' + jpVoice.name + '）';
-        } else {
-          label.textContent = '✅ 支援系統語音合成 (ja-JP 標準日語模式)';
-        }
-      } else {
-        label.textContent = '⚠️ 目前瀏覽器環境不支援 Web Speech TTS，請於手機建置版使用原生語音';
+    // 4-Tier Hybrid Japanese Speech Engine (Single-Channel Session-Isolated Audio + 防誤觸鄰近發音保護)
+    let sharedTtsAudio = null;
+    let sharedAudioCtx = null;
+    let activeTtsSessionId = 0;
+    let activeUtterance = null;
+    let speechWatchdogTimer = null;
+    let activeMoraOscillators = [];
+    let lastSpeakTimestamp = 0;
+    let lastSpeakSignature = '';
+
+    function isAndroidWebViewEnv() {
+      const ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : '';
+      return /wv|Android.*Version\/[0-9.]+/i.test(ua) || !('speechSynthesis' in window);
+    }
+
+    function stopAllJapaneseAudio() {
+      if (speechWatchdogTimer) {
+        clearTimeout(speechWatchdogTimer);
+        speechWatchdogTimer = null;
+      }
+      if (activeUtterance) {
+        try {
+          activeUtterance.onstart = null;
+          activeUtterance.onerror = null;
+          activeUtterance.onend = null;
+        } catch (e) {}
+        activeUtterance = null;
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
+      if (sharedTtsAudio) {
+        try {
+          sharedTtsAudio.onerror = null;
+          sharedTtsAudio.onended = null;
+          sharedTtsAudio.oncanplaythrough = null;
+          sharedTtsAudio.pause();
+          sharedTtsAudio.currentTime = 0;
+        } catch (e) {}
+      }
+      if (activeMoraOscillators && activeMoraOscillators.length > 0) {
+        activeMoraOscillators.forEach(node => {
+          try {
+            if (typeof node.stop === 'function') node.stop();
+            if (typeof node.disconnect === 'function') node.disconnect();
+          } catch (e) {}
+        });
+        activeMoraOscillators = [];
       }
     }
 
-    function speakJapaneseText(text, slow = false) {
-      recordStudySeconds(4);
-      if (!('speechSynthesis' in window)) {
-        showToast('⚠️ 目前環境不支援語音播放，請確認裝置系統 TTS 設定。');
+    function checkTtsSupport() {
+      const label = document.getElementById('ttsStatusLabel');
+      if (!label) return;
+      if (window.AndroidTTS && typeof window.AndroidTTS.speak === 'function') {
+        label.textContent = '✅ 已就緒（Android 原生系統日語語音引擎 ja-JP）';
         return;
       }
-      try {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = 'ja-JP';
-        utter.rate = slow ? 0.45 : (appState.speechRate || 0.70);
-        utter.pitch = 1.0;
-        const voices = window.speechSynthesis.getVoices();
+      if ('speechSynthesis' in window && !isAndroidWebViewEnv()) {
+        const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
         const jpVoice = voices.find(v => v.lang && v.lang.toLowerCase().includes('ja'));
-        if (jpVoice) utter.voice = jpVoice;
-        utter.onerror = () => {
-          showToast('⚠️ 語音播放失敗，請檢查裝置音量或是否已安裝日語語音包。');
-        };
-        window.speechSynthesis.speak(utter);
-      } catch (err) {
-        showToast('⚠️ 語音播放發生錯誤：' + err.message);
+        if (jpVoice) {
+          label.textContent = '✅ 已就緒（系統原生東京標準音 TTS：' + jpVoice.name + '）';
+          return;
+        }
       }
+      label.textContent = '✅ 已就緒（四層智慧語音：系統原生 ja-JP ＋ 雲端神經語音 ＋ 離線音拍合成器）';
+    }
+
+    function sanitizeJapaneseForTts(rawText) {
+      if (!rawText) return 'あ';
+      let cleaned = String(rawText)
+        .replace(/（[^）]*）/g, '')
+        .replace(/\([^)]*\)/g, '')
+        .split('/')[0]
+        .split('｜')[0]
+        .trim();
+      return cleaned || String(rawText).trim();
+    }
+
+    function playOfflineJapaneseMoraAudio(text, slow = false, sessionId = activeTtsSessionId) {
+      if (sessionId !== activeTtsSessionId) return false;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return false;
+        if (!sharedAudioCtx) sharedAudioCtx = new AudioCtx();
+        if (sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
+
+        const clean = sanitizeJapaneseForTts(text);
+        const moraDur = slow ? 0.26 : 0.17;
+        const now = sharedAudioCtx.currentTime + 0.02;
+        const vowelFormants = {
+          a: [750, 1250], i: [300, 2300], u: [350, 1300], e: [500, 1900], o: [480, 900], n: [280, 1000]
+        };
+        const chars = Array.from(clean).slice(0, 18);
+        let tOffset = 0;
+
+        chars.forEach((ch, idx) => {
+          if (ch === 'っ' || ch === 'ッ' || ch === '、' || ch === '。' || ch === ' ') {
+            tOffset += moraDur * 0.85;
+            return;
+          }
+          const code = ch.charCodeAt(0);
+          let vKey = 'a';
+          if (ch === 'ん' || ch === 'ン') vKey = 'n';
+          else if ('いきしちにひみりぎじぢびぴイキシチニヒミリギジヂビピ'.includes(ch)) vKey = 'i';
+          else if ('うくすつぬふむゆるぐずづぶぷゅュウクスツヌフムユルグズヅブプ'.includes(ch)) vKey = 'u';
+          else if ('えけせてねへめれげぜでべぺエケセテネヘメレゲゼデベペ'.includes(ch)) vKey = 'e';
+          else if ('おこそとのほもよろをごぞどぼぽょョオコソトノホモヨロヲゴゾドボポ'.includes(ch)) vKey = 'o';
+          else if (code % 5 === 1) vKey = 'i';
+          else if (code % 5 === 2) vKey = 'u';
+          else if (code % 5 === 3) vKey = 'e';
+          else if (code % 5 === 4) vKey = 'o';
+
+          const [f1] = vowelFormants[vKey] || vowelFormants.a;
+          const pitchHz = (idx === 0 && chars.length > 1) ? 210 : 255;
+
+          const osc1 = sharedAudioCtx.createOscillator();
+          const osc2 = sharedAudioCtx.createOscillator();
+          const gain = sharedAudioCtx.createGain();
+
+          osc1.type = 'triangle';
+          osc2.type = 'sine';
+          osc1.frequency.setValueAtTime(pitchHz, now + tOffset);
+          osc2.frequency.setValueAtTime(f1, now + tOffset);
+
+          gain.gain.setValueAtTime(0.001, now + tOffset);
+          gain.gain.linearRampToValueAtTime(0.18, now + tOffset + 0.025);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + tOffset + moraDur * 0.9);
+
+          osc1.connect(gain);
+          osc2.connect(gain);
+          gain.connect(sharedAudioCtx.destination);
+          activeMoraOscillators.push(osc1, osc2, gain);
+
+          osc1.start(now + tOffset);
+          osc2.start(now + tOffset);
+          osc1.stop(now + tOffset + moraDur);
+          osc2.stop(now + tOffset + moraDur);
+          tOffset += moraDur;
+        });
+        showToast('🔊 離線音拍發音引導：「' + clean + '」');
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function playCloudJapaneseTts(text, slow = false, sessionId = activeTtsSessionId) {
+      if (sessionId !== activeTtsSessionId) return;
+      const clean = sanitizeJapaneseForTts(text);
+      const q = encodeURIComponent(clean);
+      const targetRate = slow ? 0.55 : (appState.speechRate || 0.75);
+      const gSpeed = (slow || targetRate <= 0.60) ? '0.24' : '0.8';
+
+      const urls = [
+        'https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=ja&ttsspeed=' + gSpeed + '&q=' + q,
+        'https://translate.google.com/translate_tts?ie=UTF-8&tl=ja&client=tw-ob&ttsspeed=' + gSpeed + '&q=' + q,
+        'https://dict.youdao.com/dictvoice?le=jap&audio=' + q,
+        'https://fanyi.sogou.com/reventondc/synthesis?text=' + q + '&speed=' + (slow ? '2' : '4') + '&lang=jp&from=translateweb'
+      ];
+
+      if (!sharedTtsAudio && typeof Audio !== 'undefined') {
+        sharedTtsAudio = new Audio();
+        sharedTtsAudio.preload = 'auto';
+      }
+      if (!sharedTtsAudio) {
+        if (sessionId === activeTtsSessionId) playOfflineJapaneseMoraAudio(clean, slow, sessionId);
+        return;
+      }
+
+      try {
+        sharedTtsAudio.onerror = null;
+        sharedTtsAudio.onended = null;
+        sharedTtsAudio.pause();
+      } catch (e) {}
+
+      let idx = 0;
+      const tryNextUrl = () => {
+        if (sessionId !== activeTtsSessionId) return;
+        if (idx >= urls.length) {
+          playOfflineJapaneseMoraAudio(clean, slow, sessionId);
+          return;
+        }
+        const currentUrl = urls[idx++];
+        try {
+          sharedTtsAudio.referrerPolicy = 'no-referrer';
+          sharedTtsAudio.src = currentUrl;
+          sharedTtsAudio.playbackRate = Math.max(0.5, Math.min(1.2, targetRate));
+          if ('preservesPitch' in sharedTtsAudio) sharedTtsAudio.preservesPitch = true;
+          sharedTtsAudio.onerror = () => {
+            if (sessionId !== activeTtsSessionId) return;
+            tryNextUrl();
+          };
+          const playPromise = sharedTtsAudio.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch((err) => {
+              if (sessionId !== activeTtsSessionId) return;
+              if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) return;
+              tryNextUrl();
+            });
+          }
+        } catch (err) {
+          if (sessionId !== activeTtsSessionId) return;
+          tryNextUrl();
+        }
+      };
+      tryNextUrl();
+    }
+
+    function speakJapaneseText(text, slow = false, evt = null) {
+      const ev = evt || (typeof window !== 'undefined' ? window.event : null);
+      if (ev && typeof ev.stopPropagation === 'function') {
+        ev.stopPropagation();
+      }
+
+      const clean = sanitizeJapaneseForTts(text);
+      const targetRate = slow ? 0.48 : (appState.speechRate || 0.70);
+
+      const nowMs = Date.now();
+      const sig = clean + '|' + String(!!slow);
+      if (sig === lastSpeakSignature && (nowMs - lastSpeakTimestamp) < 60) {
+        return;
+      }
+      lastSpeakTimestamp = nowMs;
+      lastSpeakSignature = sig;
+
+      const sessionId = ++activeTtsSessionId;
+      stopAllJapaneseAudio();
+      recordStudySeconds(4);
+
+      if (window.AndroidTTS && typeof window.AndroidTTS.speak === 'function') {
+        try {
+          window.AndroidTTS.speak(clean, String(targetRate));
+          return;
+        } catch (e) {}
+      }
+
+      if ('speechSynthesis' in window) {
+        const voices = (typeof window.speechSynthesis.getVoices === 'function')
+          ? window.speechSynthesis.getVoices()
+          : [];
+        const hasJpVoice = voices.some(v => v.lang && v.lang.toLowerCase().includes('ja'));
+
+        if (!isAndroidWebViewEnv() || hasJpVoice) {
+          try {
+            const utter = new SpeechSynthesisUtterance(clean);
+            activeUtterance = utter;
+            utter.lang = 'ja-JP';
+            utter.rate = targetRate;
+            utter.pitch = 1.0;
+            const jpVoice = voices.find(v => v.lang && v.lang.toLowerCase().includes('ja'));
+            if (jpVoice) utter.voice = jpVoice;
+
+            let started = false;
+            let fellBack = false;
+            utter.onstart = () => {
+              if (sessionId !== activeTtsSessionId) {
+                try { window.speechSynthesis.cancel(); } catch (e) {}
+                return;
+              }
+              started = true;
+            };
+            utter.onend = () => {
+              if (activeUtterance === utter) activeUtterance = null;
+            };
+            utter.onerror = (errEvt) => {
+              if (activeUtterance === utter) activeUtterance = null;
+              if (sessionId !== activeTtsSessionId) return;
+              const errCode = (errEvt && errEvt.error) ? String(errEvt.error).toLowerCase() : '';
+              if (started || errCode === 'canceled' || errCode === 'cancelled' || errCode === 'interrupted') {
+                return;
+              }
+              if (!fellBack && (isAndroidWebViewEnv() || !hasJpVoice)) {
+                fellBack = true;
+                playCloudJapaneseTts(clean, slow, sessionId);
+              }
+            };
+            window.speechSynthesis.speak(utter);
+            if (window.speechSynthesis.paused && typeof window.speechSynthesis.resume === 'function') {
+              try { window.speechSynthesis.resume(); } catch (e) {}
+            }
+
+            if (isAndroidWebViewEnv() && typeof setTimeout === 'function' && typeof Audio !== 'undefined') {
+              speechWatchdogTimer = setTimeout(() => {
+                if (sessionId !== activeTtsSessionId) return;
+                if (!started && !fellBack) {
+                  fellBack = true;
+                  if (activeUtterance === utter) {
+                    utter.onstart = null;
+                    utter.onerror = null;
+                    utter.onend = null;
+                    activeUtterance = null;
+                  }
+                  try { window.speechSynthesis.cancel(); } catch (e) {}
+                  playCloudJapaneseTts(clean, slow, sessionId);
+                }
+              }, 350);
+            }
+            return;
+          } catch (err) {
+            if (sessionId !== activeTtsSessionId) return;
+          }
+        }
+      }
+      playCloudJapaneseTts(clean, slow, sessionId);
     }
 
     // Navigation Tabs
@@ -1092,7 +1407,7 @@
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <h4 class="font-bold text-sm text-[#1B365D] dark:text-blue-300">${rowName}</h4>
-              <button onclick="speakJapaneseText('${rowItems.map(i => i.hiragana).join('、')}', false)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 font-semibold">
+              <button onclick="event.stopPropagation(); speakJapaneseText('${rowItems.map(i => i.hiragana).join('、')}', false)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 font-semibold">
                 🔊 連播整行
               </button>
             </div>
@@ -1159,7 +1474,7 @@
                           <span class="font-bold jp-font block">${ex.jp}</span>
                           <span class="text-slate-500">${ex.zh}</span>
                         </div>
-                        <button onclick="speakJapaneseText('${ex.jp.split('(')[0]}', false)" class="px-2 py-1 rounded bg-[#1B365D] text-white text-xs">🔊 聽對比</button>
+                        <button onclick="event.stopPropagation(); speakJapaneseText('${ex.jp.split('(')[0]}', false)" class="px-2 py-1 rounded bg-[#1B365D] text-white text-xs">🔊 聽對比</button>
                       </div>
                     `).join('')}
                   </div>
@@ -1194,8 +1509,8 @@
               <div class="text-sm font-bold text-[#D64045]">羅馬拼音：${k.romaji}</div>
               <div class="text-xs text-slate-600 dark:text-slate-300">代表詞：${k.exampleWord}</div>
               <div class="flex justify-center gap-2 pt-2">
-                <button onclick="speakJapaneseText('${k.hiragana}', false)" class="tap-btn px-3 py-1.5 rounded-lg bg-[#1B365D] text-white text-xs font-bold">🔊 1. 播放正常速度</button>
-                <button onclick="speakJapaneseText('${k.hiragana}', true)" class="tap-btn px-3 py-1.5 rounded-lg border border-[#1B365D] text-xs font-bold">🐢 2. 播放慢速 0.6x</button>
+                <button onclick="event.stopPropagation(); speakJapaneseText('${k.hiragana}', false)" class="tap-btn px-3 py-1.5 rounded-lg bg-[#1B365D] text-white text-xs font-bold">🔊 1. 播放正常速度</button>
+                <button onclick="event.stopPropagation(); speakJapaneseText('${k.hiragana}', true)" class="tap-btn px-3 py-1.5 rounded-lg border border-[#1B365D] text-xs font-bold">🐢 2. 播放慢速 0.6x</button>
               </div>
             </div>
             <div class="space-y-2">
@@ -1218,7 +1533,7 @@
             </div>
             <div class="p-4 rounded-xl bg-blue-50/70 dark:bg-slate-800 text-center space-y-3">
               <p class="text-xs text-slate-600 dark:text-slate-300">請點擊下方按鈕聆聽日語發音，再從四個選項中選出正確假名：</p>
-              <button onclick="speakJapaneseText('${k.hiragana}', false)" class="tap-btn px-5 py-2.5 rounded-xl bg-[#1B365D] text-white text-sm font-bold">
+              <button onclick="event.stopPropagation(); speakJapaneseText('${k.hiragana}', false)" class="tap-btn px-5 py-2.5 rounded-xl bg-[#1B365D] text-white text-sm font-bold">
                 🔊 播放題目發音
               </button>
             </div>
@@ -1740,8 +2055,8 @@
           ${appState.showRomaji ? `<div class="text-[11px] text-[#D64045] font-semibold">Romaji: ${res.romaji} en</div>` : ''}
         </div>
         <div class="flex gap-1.5">
-          <button onclick="speakJapaneseText('${res.hira}', false)" class="tap-btn px-3 py-1.5 rounded-lg bg-[#1B365D] text-white text-xs font-bold">🔊 慢速讀數字</button>
-          <button onclick="speakJapaneseText('${res.hira}えん', false)" class="tap-btn px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-bold">💴 讀金額(円)</button>
+          <button onclick="event.stopPropagation(); speakJapaneseText('${res.hira}', false)" class="tap-btn px-3 py-1.5 rounded-lg bg-[#1B365D] text-white text-xs font-bold">🔊 慢速讀數字</button>
+          <button onclick="event.stopPropagation(); speakJapaneseText('${res.hira}えん', false)" class="tap-btn px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-bold">💴 讀金額(円)</button>
         </div>
       `;
     }
@@ -1759,7 +2074,7 @@
       box.innerHTML = `
         <div class="flex items-center justify-between">
           <span class="font-bold text-amber-900 dark:text-amber-200">🎧 數字與價格聽力挑戰：請聽店員報價並選出正確金額！</span>
-          <button onclick="speakJapaneseText('${reading.hira}えんになります', false)" class="px-2.5 py-1 rounded bg-[#1B365D] text-white font-bold">🔊 重播報價</button>
+          <button onclick="event.stopPropagation(); speakJapaneseText('${reading.hira}えんになります', false)" class="px-2.5 py-1 rounded bg-[#1B365D] text-white font-bold">🔊 重播報價</button>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
           ${options.map(opt => `
@@ -1850,9 +2165,9 @@
                 <span class="text-base font-bold text-[#D64045] jp-font">【${selectedSingleNumItem.hiragana}】</span>
               </div>
               <div class="flex gap-1.5">
-                <button onclick="speakJapaneseText('${selectedSingleNumItem.hiragana.split('/')[0].split('（')[0].trim()}', false)" class="px-3 py-1 rounded-lg bg-[#1B365D] text-white text-xs font-bold">🔊 單字發音</button>
-                <button onclick="speakJapaneseText('${selectedSingleNumItem.hiragana.split('/')[0].split('（')[0].trim()}', true)" class="px-3 py-1 rounded-lg border border-[#1B365D] text-xs font-bold">🐢 分解特慢</button>
-                <button onclick="speakJapaneseText('${selectedSingleNumItem.exampleJp}', false)" class="px-3 py-1 rounded-lg bg-emerald-700 text-white text-xs font-bold">🗣️ 讀例句</button>
+                <button onclick="event.stopPropagation(); speakJapaneseText('${selectedSingleNumItem.hiragana.split('/')[0].split('（')[0].trim()}', false)" class="px-3 py-1 rounded-lg bg-[#1B365D] text-white text-xs font-bold">🔊 單字發音</button>
+                <button onclick="event.stopPropagation(); speakJapaneseText('${selectedSingleNumItem.hiragana.split('/')[0].split('（')[0].trim()}', true)" class="px-3 py-1 rounded-lg border border-[#1B365D] text-xs font-bold">🐢 分解特慢</button>
+                <button onclick="event.stopPropagation(); speakJapaneseText('${selectedSingleNumItem.exampleJp}', false)" class="px-3 py-1 rounded-lg bg-emerald-700 text-white text-xs font-bold">🗣️ 讀例句</button>
               </div>
             </div>
             ${appState.showRomaji ? `<div class="text-xs font-bold text-[#D64045]">羅馬拼音：${selectedSingleNumItem.romaji}</div>` : ''}
@@ -1911,7 +2226,7 @@
                     ${appState.showRomaji ? `<div class="text-[11px] text-[#D64045]">${ex.romaji}</div>` : ''}
                     <div class="text-slate-500">${ex.zh}</div>
                   </div>
-                  <button onclick="speakJapaneseText('${ex.hira.split('vs')[0].trim()}', false)" class="px-2.5 py-1 rounded bg-[#1B365D] text-white font-bold">🔊</button>
+                  <button onclick="event.stopPropagation(); speakJapaneseText('${ex.hira.split('vs')[0].trim()}', false)" class="px-2.5 py-1 rounded bg-[#1B365D] text-white font-bold">🔊</button>
                 </div>
               `).join('')}
             </div>
@@ -1928,7 +2243,7 @@
                 </div>
                 <p class="text-xs text-slate-500 mt-0.5"><b>適用物件：</b>${cnt.appliesTo}</p>
               </div>
-              <button onclick="speakJapaneseText('${cnt.exampleJp}', false)" class="tap-btn px-3 py-1.5 rounded-xl bg-[#1B365D] text-white text-xs font-bold self-start sm:self-auto">
+              <button onclick="event.stopPropagation(); speakJapaneseText('${cnt.exampleJp}', false)" class="tap-btn px-3 py-1.5 rounded-xl bg-[#1B365D] text-white text-xs font-bold self-start sm:self-auto">
                 🔊 播放情境例句
               </button>
             </div>
@@ -1946,7 +2261,7 @@
 
             <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-1">
               ${cnt.countTable.map(row => `
-                <button onclick="speakJapaneseText('${row.h.split('/')[0].split('（')[0]}', false)" class="p-2 rounded-lg border text-left transition ${row.irr ? 'border-rose-300 dark:border-rose-700 bg-rose-50/50 dark:bg-rose-950/30' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50'} hover:border-[#1B365D]">
+                <button onclick="event.stopPropagation(); speakJapaneseText('${row.h.split('/')[0].split('（')[0]}', false)" class="p-2 rounded-lg border text-left transition ${row.irr ? 'border-rose-300 dark:border-rose-700 bg-rose-50/50 dark:bg-rose-950/30' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50'} hover:border-[#1B365D]">
                   <div class="flex items-center justify-between text-[11px] text-slate-400">
                     <span>${row.n}</span>
                     <span>🔊</span>
@@ -1967,8 +2282,8 @@
                 <div class="font-semibold text-slate-700 dark:text-slate-200">中文：${cnt.exampleZh}</div>
               </div>
               <div class="flex gap-1.5">
-                <button onclick="speakJapaneseText('${cnt.exampleJp}', false)" class="tap-btn px-3 py-1.5 rounded-lg bg-emerald-700 text-white font-bold whitespace-nowrap">🔊 正常播放</button>
-                <button onclick="speakJapaneseText('${cnt.exampleJp}', true)" class="tap-btn px-3 py-1.5 rounded-lg border border-emerald-700 font-bold whitespace-nowrap">🐢 慢速</button>
+                <button onclick="event.stopPropagation(); speakJapaneseText('${cnt.exampleJp}', false)" class="tap-btn px-3 py-1.5 rounded-lg bg-emerald-700 text-white font-bold whitespace-nowrap">🔊 正常播放</button>
+                <button onclick="event.stopPropagation(); speakJapaneseText('${cnt.exampleJp}', true)" class="tap-btn px-3 py-1.5 rounded-lg border border-emerald-700 font-bold whitespace-nowrap">🐢 慢速</button>
               </div>
             </div>
           </div>
@@ -2035,8 +2350,8 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span class="inline-block px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-bold text-[#1B365D] dark:text-blue-300 self-start">${line.speaker}</span>
                   <div class="flex flex-wrap gap-1.5">
-                    <button onclick="speakJapaneseText('${line.jp}', false)" class="px-2.5 py-1 rounded-lg bg-[#1B365D] text-white text-xs font-semibold">🔊 正常發音</button>
-                    <button onclick="speakJapaneseText('${line.jp}', true)" class="px-2.5 py-1 rounded-lg border border-[#1B365D] dark:border-blue-400 text-xs font-semibold">🐢 慢速跟讀</button>
+                    <button onclick="event.stopPropagation(); speakJapaneseText('${line.jp}', false)" class="px-2.5 py-1 rounded-lg bg-[#1B365D] text-white text-xs font-semibold">🔊 正常發音</button>
+                    <button onclick="event.stopPropagation(); speakJapaneseText('${line.jp}', true)" class="px-2.5 py-1 rounded-lg border border-[#1B365D] dark:border-blue-400 text-xs font-semibold">🐢 慢速跟讀</button>
                     <button onclick="toggleFavoriteItem('${line.id}', '${line.jp}', '${line.hira}', '${line.romaji}', '${line.zh}', '${conv.title}')" class="px-2.5 py-1 rounded-lg border ${isFav ? 'bg-amber-100 border-amber-400 text-amber-900' : 'border-slate-300'} text-xs font-semibold">
                       ${isFav ? '⭐ 已收藏' : '☆ 收藏句子'}
                     </button>
@@ -2068,7 +2383,7 @@
                       <div class="text-slate-500">${v.zh}</div>
                     </div>
                     <div class="flex flex-col gap-1">
-                      <button onclick="speakJapaneseText('${v.jp.split('（')[0]}', false)" class="px-2 py-0.5 rounded bg-white dark:bg-slate-700 border text-[11px]">🔊</button>
+                      <button onclick="event.stopPropagation(); speakJapaneseText('${v.jp.split('（')[0]}', false)" class="px-2 py-0.5 rounded bg-white dark:bg-slate-700 border text-[11px]">🔊</button>
                       <button onclick="toggleFavoriteItem('${vId}', '${v.jp}', '${v.jp}', '${v.romaji}', '${v.zh}', '${conv.title}')" class="px-2 py-0.5 rounded bg-white dark:bg-slate-700 border text-[11px]">${isFav ? '⭐' : '☆'}</button>
                     </div>
                   </div>
@@ -2308,7 +2623,7 @@
                         <span class="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-200 text-xs font-bold">第 ${qIdx + 1} 題 · ${q.typeName}</span>
                         <span class="text-xs text-slate-400">${q.module}</span>
                       </div>
-                      <button onclick="speakJapaneseText('${q.targetAudio}', false)" class="px-2.5 py-1 rounded-lg bg-[#1B365D] text-white text-xs font-bold">🔊 播放題目音訊</button>
+                      <button onclick="event.stopPropagation(); speakJapaneseText('${q.targetAudio}', false)" class="px-2.5 py-1 rounded-lg bg-[#1B365D] text-white text-xs font-bold">🔊 播放題目音訊</button>
                     </div>
                     <div class="text-sm sm:text-base font-bold">${q.prompt}</div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -2411,7 +2726,7 @@
                   <div class="font-semibold text-slate-700 dark:text-slate-200">${fav.zh}</div>
                 </div>
                 <div class="flex flex-col gap-1.5">
-                  <button onclick="speakJapaneseText('${fav.jp.split('（')[0]}', false)" class="px-3 py-1.5 rounded-lg bg-[#1B365D] text-white text-xs font-bold">🔊</button>
+                  <button onclick="event.stopPropagation(); speakJapaneseText('${fav.jp.split('（')[0]}', false)" class="px-3 py-1.5 rounded-lg bg-[#1B365D] text-white text-xs font-bold">🔊</button>
                   <button onclick="toggleFavoriteItem('${fav.id}', '', '', '', '', '')" class="px-3 py-1.5 rounded-lg border border-rose-300 text-rose-600 text-xs font-bold">移除</button>
                 </div>
               </div>
@@ -2507,9 +2822,386 @@
       showToast('已重置所有本機學習紀錄，恢復初始狀態。');
     }
 
+    // ==========================================
+    // 國際版核心增強模組移植 (粵/國語雙軌諧音、5大輔助圖層控制、8情境智慧數字轉換、核心文法總表與快速跳課)
+    // ==========================================
+    appState.layers = appState.layers || { romaji: true, native: true, hira: true, trans: true, notes: true };
+    appState.phoneticDialect = appState.phoneticDialect || 'hk';
+    let convViewSubTab = 'dlg';
+
+    const MORA_TO_CANTONESE = {
+      'きゃ':'卡','きゅ':'Q','きょ':'kio','しゃ':'沙','しゅ':'書','しょ':'梳','ちゃ':'叉','ちゅ':'超','ちょ':'初',
+      'にゃ':'nya','にゅ':'nyu','にょ':'nyo','ひゃ':'hya','ひゅ':'hyu','ひょ':'hyo','みゃ':'mya','みゅ':'myu','みょ':'myo',
+      'りゃ':'rya','りゅ':'ryu','りょ':'ryo','ぎゃ':'gya','ぎゅ':'gyu','ぎょ':'gyo','じゃ':'ja','じゅ':'ju','じょ':'jo',
+      'びゃ':'bya','びゅ':'byu','びょ':'byo','ぴゃ':'pya','ぴゅ':'pyu','ぴょ':'pyo',
+      'あ':'阿','い':'依','う':'烏','え':'誒','お':'哦','か':'卡','き':'ki','く':'姑','け':'ke','こ':'哥',
+      'さ':'沙','し':'詩','す':'思','せ':'些','そ':'梳','た':'他','ち':'知','つ':'次','て':'爹','と':'多',
+      'な':'那','に':'呢','ぬ':'奴','ね':'呢','の':'囉','は':'哈','ひ':'希','ふ':'夫','へ':'he','ほ':'賀',
+      'ま':'媽','み':'咪','む':'姆','め':'咩','も':'摩','や':'也','ゆ':'優','よ':'喲',
+      'ら':'啦','り':'哩','る':'嚕','れ':'呢','ろ':'囉','わ':'哇','を':'哦','ん':'嗯',
+      'が':'ga','ぎ':'gi','ぐ':'gu','げ':'ge','ご':'go','ざ':'za','じ':'芝','ず':'zu','ぜ':'ze','ぞ':'zo',
+      'だ':'da','ぢ':'芝','づ':'zu','で':'de','ど':'do','ば':'巴','び':'bi','ぶ':'bu','べ':'be','ぼ':'bo',
+      'ぱ':'pa','ぴ':'pi','ぷ':'pu','ぺ':'pe','ぽ':'po','っ':'(停半拍)','ー':'～'
+    };
+
+    const MORA_TO_MANDARIN = {
+      'きゃ':'kya','きゅ':'kyu','きょ':'kyo','しゃ':'瞎','しゅ':'修','しょ':'休','ちゃ':'恰','ちゅ':'秋','ちょ':'丘',
+      'にゃ':'nya','にゅ':'nyu','にょ':'nyo','ひゃ':'hya','ひゅ':'hyu','ひょ':'hyo','みゃ':'mya','みゅ':'myu','みょ':'myo',
+      'りゃ':'rya','りゅ':'ryu','りょ':'ryo','ぎゃ':'gya','ぎゅ':'gyu','ぎょ':'gyo','じゃ':'加','じゅ':'揪','じょ':'九',
+      'びゃ':'bya','びゅ':'byu','びょ':'byo','ぴゃ':'pya','ぴゅ':'pyu','ぴょ':'pyo',
+      'あ':'啊','い':'衣','う':'','え':'欸','お':'喔','か':'卡','き':'ki','く':'哭','け':'ke','こ':'摳',
+      'さ':'撒','し':'西','す':'絲','せ':'se','そ':'搜','た':'他','ち':'七','つ':'疵','て':'te','と':'偷',
+      'な':'那','に':'你','ぬ':'奴','ね':'捏','の':'no','は':'哈','ひ':'希','ふ':'夫','へ':'he','ほ':'齁',
+      'ま':'媽','み':'咪','む':'姆','め':'咩','も':'摸','や':'呀','ゆ':'優','よ':'優',
+      'ら':'拉','り':'里','る':'擼','れ':'le','ろ':'摟','わ':'哇','を':'喔','ん':'嗯',
+      'が':'ga','ぎ':'gi','ぐ':'gu','げ':'ge','ご':'go','ざ':'za','じ':'幾','ず':'zu','ぜ':'ze','ぞ':'zo',
+      'だ':'da','ぢ':'幾','づ':'zu','で':'de','ど':'do','ば':'吧','び':'比','ぶ':'不','べ':'be','ぼ':'bo',
+      'ぱ':'怕','ぴ':'批','ぷ':'鋪','ぺ':'pe','ぽ':'po','っ':'(停半拍)','ー':'～'
+    };
+
+    function computeChinesePronGuide(hiraStr) {
+      if (!hiraStr) return '';
+      const dict = (appState.phoneticDialect === 'tw') ? MORA_TO_MANDARIN : MORA_TO_CANTONESE;
+      const clean = String(hiraStr).replace(/\s+/g, '');
+      const out = [];
+      let i = 0;
+      while (i < clean.length) {
+        const two = clean.slice(i, i + 2);
+        if (two.length === 2 && dict[two]) {
+          out.push(dict[two]);
+          i += 2;
+          continue;
+        }
+        const one = clean[i];
+        if (dict[one]) out.push(dict[one]);
+        else if (!'、。！？「」（）・'.includes(one)) out.push(one);
+        i += 1;
+      }
+      return out.join('-');
+    }
+
+    function setPhoneticDialect(dialect) {
+      appState.phoneticDialect = dialect === 'tw' ? 'tw' : 'hk';
+      saveState();
+      updateCustomNumberConverter();
+      renderKanaSection();
+      renderNumbersAndCountersSection();
+      renderConversationSection();
+      showToast(appState.phoneticDialect === 'hk' ? '🗣️ 已切換為【香港粵語諧音】輔助標註' : '🗣️ 已切換為【國語諧音】輔助標註');
+    }
+
+    function syncAidToolbarUI() {
+      appState.layers = appState.layers || { romaji: true, native: true, hira: true, trans: true, notes: true };
+      appState.layers.romaji = !!appState.showRomaji;
+      const map = [['chkLayerRomaji','romaji'],['chkLayerNative','native'],['chkLayerHira','hira'],['chkLayerTrans','trans'],['chkLayerNotes','notes']];
+      map.forEach(([id, k]) => {
+        const el = document.getElementById(id);
+        if (el) el.checked = !!appState.layers[k];
+      });
+      const selDia = document.getElementById('selectPhoneticDialect');
+      if (selDia) selDia.value = appState.phoneticDialect || 'hk';
+      const curRate = appState.speechRate || 0.8;
+      document.querySelectorAll('#headerSpeedGroup [data-hspd]').forEach(btn => {
+        const r = parseFloat(btn.getAttribute('data-hspd'));
+        const active = Math.abs(curRate - r) < 0.06;
+        btn.className = active
+          ? 'px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-bold'
+          : 'px-1.5 py-0.5 rounded hover:bg-white/20 text-white';
+      });
+    }
+
+    function applyAidPreset(preset) {
+      if (preset === 'beginner') {
+        appState.layers = { romaji: true, native: true, hira: true, trans: true, notes: true };
+        appState.showRomaji = true;
+      } else {
+        appState.layers = { romaji: false, native: false, hira: true, trans: false, notes: false };
+        appState.showRomaji = false;
+      }
+      const bBeg = document.getElementById('presetBtnBeginner');
+      const bAdv = document.getElementById('presetBtnAdvanced');
+      if (bBeg && bAdv) {
+        bBeg.className = preset === 'beginner' ? 'px-2.5 py-0.5 rounded-full font-bold bg-amber-400 text-slate-950 transition' : 'px-2.5 py-0.5 rounded-full font-bold bg-white/10 text-slate-200 hover:bg-white/20 transition';
+        bAdv.className = preset === 'advanced' ? 'px-2.5 py-0.5 rounded-full font-bold bg-amber-400 text-slate-950 transition' : 'px-2.5 py-0.5 rounded-full font-bold bg-white/10 text-slate-200 hover:bg-white/20 transition';
+      }
+      syncAidToolbarUI();
+      applyThemeAndTypography();
+      saveState();
+      updateCustomNumberConverter();
+      renderKanaSection();
+      renderNumbersAndCountersSection();
+      renderConversationSection();
+      showToast(preset === 'beginner' ? '🌱 已開啟【初學全開模式】：顯示所有拼音、諧音、翻譯與文法解析' : '🎓 已開啟【進階挑戰模式】：隱藏羅馬拼音、諧音與中文翻譯');
+    }
+
+    function toggleAidLayer(key, checked) {
+      appState.layers = appState.layers || { romaji: true, native: true, hira: true, trans: true, notes: true };
+      appState.layers[key] = !!checked;
+      if (key === 'romaji') appState.showRomaji = !!checked;
+      syncAidToolbarUI();
+      applyThemeAndTypography();
+      saveState();
+      updateCustomNumberConverter();
+      renderKanaSection();
+      renderNumbersAndCountersSection();
+      renderConversationSection();
+    }
+
+    const origSetGlobalSpeechRate = setGlobalSpeechRate;
+    setGlobalSpeechRate = function(rate) {
+      origSetGlobalSpeechRate(rate);
+      syncAidToolbarUI();
+    };
+
+    const origSwitchMainTab = switchMainTab;
+    switchMainTab = function(tab) {
+      stopAllJapaneseAudio();
+      origSwitchMainTab(tab);
+    };
+
+    const origCloseKanaModal = closeKanaModal;
+    closeKanaModal = function() {
+      stopAllJapaneseAudio();
+      origCloseKanaModal();
+    };
+
+    function convertJapaneseByContext(rawInput, ctx) {
+      const str = String(rawInput || '').trim();
+      if (!str) return { kanji: '—', hira: '—', romaji: '—' };
+      const DATE_SPEC = {
+        1:['一日','ついたち','tsuitachi'], 2:['二日','ふつか','futsuka'], 3:['三日','みっか','mikka'],
+        4:['四日','よっか','yokka'], 5:['五日','いつか','itsuka'], 6:['六日','むいか','muika'],
+        7:['七日','なのか','nanoka'], 8:['八日','ようか','youka'], 9:['九日','ここのか','kokonoka'],
+        10:['十日','とおか','tooka'], 14:['十四日','じゅうよっか','juuyokka'], 20:['二十日','はつか','hatsuka'],
+        24:['二十四日','にじゅうよっか','nijuuyokka']
+      };
+      if (ctx === 'time' || str.includes(':')) {
+        const parts = str.split(':');
+        const hh = Math.max(0, Math.min(23, parseInt(parts[0] || '0', 10) || 0));
+        const mm = Math.max(0, Math.min(59, parseInt(parts[1] || '0', 10) || 0));
+        const hMap = {0:['零時','れいじ','reiji'],4:['四時','よじ','yoji'],7:['七時','しちじ','shichiji'],9:['九時','くじ','kuji']};
+        const hBase = hMap[hh] || [convertIntToJapaneseReading(hh).kanji+'時', convertIntToJapaneseReading(hh).hira+'じ', convertIntToJapaneseReading(hh).romaji+'ji'];
+        if (mm === 0) return { kanji: hBase[0], hira: hBase[1], romaji: hBase[2] };
+        if (mm === 30) return { kanji: hBase[0]+'半', hira: hBase[1]+'はん', romaji: hBase[2]+' han' };
+        const mBase = convertIntToJapaneseReading(mm);
+        const mLast = mm % 10;
+        const pun = [1,3,4,6,8,0].includes(mLast);
+        let mHira = mBase.hira + (pun ? 'ぷん' : 'ふん');
+        let mRom = mBase.romaji + (pun ? 'pun' : 'fun');
+        if (mLast === 1) { mHira = mBase.hira.replace(/いち$/,'いっぷん'); mRom = mBase.romaji.replace(/ichi$/,'ippun'); }
+        if (mLast === 6) { mHira = mBase.hira.replace(/ろく$/,'ろっぷん'); mRom = mBase.romaji.replace(/roku$/,'roppun'); }
+        if (mLast === 8) { mHira = mBase.hira.replace(/はち$/,'はっぷん'); mRom = mBase.romaji.replace(/hachi$/,'happun'); }
+        if (mLast === 0) { mHira = mBase.hira.replace(/じゅう$/,'じゅっぷん'); mRom = mBase.romaji.replace(/juu$/,'juppun'); }
+        return { kanji: `${hBase[0]}${mBase.kanji}分`, hira: `${hBase[1]} ${mHira}`, romaji: `${hBase[2]} ${mRom}` };
+      }
+      if (ctx === 'phone') {
+        const dMap = {'0':['零','ゼロ','zero'],'1':['一','いち','ichi'],'2':['二','に','ni'],'3':['三','さん','san'],'4':['四','よん','yon'],'5':['五','ご','go'],'6':['六','ろく','roku'],'7':['七','なな','nana'],'8':['八','はち','hachi'],'9':['九','きゅう','kyuu'],'-':['の','の','no']};
+        const chars = str.split('').filter(c => dMap[c]);
+        if (!chars.length) return { kanji: '—', hira: '—', romaji: '—' };
+        return { kanji: chars.map(c => dMap[c][0]).join('・'), hira: chars.map(c => dMap[c][1]).join(' '), romaji: chars.map(c => dMap[c][2]).join(' ') };
+      }
+      const numVal = parseFloat(str.replace(/,/g, '.'));
+      if (!isFinite(numVal)) return { kanji: '—', hira: '—', romaji: '—' };
+      const intVal = Math.min(9999999999, Math.floor(Math.abs(numVal)));
+      const base = convertIntToJapaneseReading(intVal);
+      if (ctx === 'date') {
+        const d = Math.max(1, Math.min(31, intVal || 1));
+        if (DATE_SPEC[d]) return { kanji: DATE_SPEC[d][0], hira: DATE_SPEC[d][1], romaji: DATE_SPEC[d][2] };
+        const b = convertIntToJapaneseReading(d);
+        return { kanji: b.kanji+'日', hira: b.hira+'にち', romaji: b.romaji+'nichi' };
+      }
+      if (ctx === 'year') {
+        const y = intVal || 2026;
+        const b = convertIntToJapaneseReading(y);
+        let h = b.hira + 'ねん', r = b.romaji + 'nen';
+        if (y % 10 === 4) { h = b.hira.replace(/よん$/,'よねん'); r = b.romaji.replace(/yon$/,'yonen'); }
+        if (y % 10 === 9) { h = b.hira.replace(/きゅう$/,'くねん'); r = b.romaji.replace(/kyuu$/,'kunen'); }
+        return { kanji: `${b.kanji}年 (${y}年)`, hira: h, romaji: r };
+      }
+      if (ctx === 'age') {
+        if (intVal === 20) return { kanji: '二十歳 (20歳・成年特殊讀法)', hira: 'はたち', romaji: 'hatachi' };
+        let h = base.hira + 'さい', r = base.romaji + 'sai';
+        if (intVal % 10 === 1 && intVal % 100 !== 11) { h = base.hira.replace(/いち$/,'いっさい'); r = base.romaji.replace(/ichi$/,'issai'); }
+        if (intVal % 10 === 8 && intVal % 100 !== 18) { h = base.hira.replace(/はち$/,'はっさい'); r = base.romaji.replace(/hachi$/,'hassai'); }
+        if (intVal > 0 && intVal % 10 === 0) { h = base.hira.replace(/じゅう$/,'じゅっさい'); r = base.romaji.replace(/juu$/,'jussai'); }
+        return { kanji: `${base.kanji}歳 (${intVal}歳)`, hira: h, romaji: r };
+      }
+      if (ctx === 'floor') {
+        const f = Math.max(1, intVal || 1);
+        const b = convertIntToJapaneseReading(f);
+        let h = b.hira + 'かい', r = b.romaji + 'kai';
+        if (f % 10 === 1) { h = b.hira.replace(/いち$/,'いっかい'); r = b.romaji.replace(/ichi$/,'ikkai'); }
+        if (f % 10 === 3) { h = b.hira + 'がい'; r = b.romaji + 'gai'; }
+        if (f % 10 === 6) { h = b.hira.replace(/ろく$/,'ろっかい'); r = b.romaji.replace(/roku$/,'rokkai'); }
+        if (f % 10 === 8) { h = b.hira.replace(/はち$/,'はっかい'); r = b.romaji.replace(/hachi$/,'hakkai'); }
+        if (f % 10 === 0) { h = b.hira.replace(/じゅう$/,'じゅっかい'); r = b.romaji.replace(/juu$/,'jukkai'); }
+        return { kanji: `${b.kanji}階 (${f}樓)`, hira: h, romaji: r };
+      }
+      if (ctx === 'count') {
+        const neg = numVal < 0;
+        const decPart = str.includes('.') || str.includes(',') ? str.split(/[.,]/)[1] : '';
+        let k = (neg ? 'マイナス' : '') + base.kanji;
+        let h = (neg ? 'マイナス ' : '') + base.hira;
+        let r = (neg ? 'mainasu ' : '') + base.romaji;
+        if (decPart) {
+          const dMap = {'0':['零','れい','rei'],'1':['一','いち','ichi'],'2':['二','に','ni'],'3':['三','さん','san'],'4':['四','よん','yon'],'5':['五','ご','go'],'6':['六','ろく','roku'],'7':['七','なな','nana'],'8':['八','はち','hachi'],'9':['九','きゅう','kyuu']};
+          const ds = decPart.split('').filter(c => dMap[c]);
+          if (ds.length) {
+            k += '点' + ds.map(c => dMap[c][0]).join('');
+            h += ' てん ' + ds.map(c => dMap[c][1]).join('');
+            r += ' ten ' + ds.map(c => dMap[c][2]).join(' ');
+          }
+        }
+        return { kanji: k, hira: h.trim(), romaji: r.trim() };
+      }
+      return { kanji: `${base.kanji}（¥${intVal.toLocaleString()} 円）`, hira: `${base.hira} えん`, romaji: `${base.romaji} en` };
+    }
+
+    updateCustomNumberConverter = function() {
+      const input = document.getElementById('inputCustomNumber');
+      const ctxEl = document.getElementById('selectNumberContext');
+      const box = document.getElementById('customNumberResultBox');
+      if (!input || !box) return;
+      const ctx = ctxEl ? ctxEl.value : 'yen';
+      const res = convertJapaneseByContext(input.value, ctx);
+      const nativePron = computeChinesePronGuide(res.hira);
+      const ly = appState.layers || { romaji: true, native: true, hira: true };
+      const diaLabel = (appState.phoneticDialect === 'tw') ? '國語諧音' : '粵語諧音';
+      box.innerHTML = `
+        <div class="text-xs space-y-0.5">
+          <div><span class="text-slate-400">日文漢字：</span><b class="text-sm jp-font">${res.kanji}</b></div>
+          ${ly.hira !== false ? `<div><span class="text-slate-400">平假名讀音：</span><b class="text-[#1B365D] dark:text-blue-300 jp-font">${res.hira}</b></div>` : ''}
+          ${ly.native !== false ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-300 font-bold">🗣️ ${diaLabel}：${nativePron}</div>` : ''}
+          ${appState.showRomaji ? `<div class="text-[11px] text-[#D64045] font-semibold">Romaji: ${res.romaji}</div>` : ''}
+        </div>
+        <div class="flex gap-1.5 shrink-0">
+          <button type="button" onclick="event.stopPropagation(); speakJapaneseText('${res.hira.replace(/'/g, '')}', false)" class="tap-btn px-3 py-1.5 rounded-lg bg-[#1B365D] text-white text-xs font-bold">🔊 正常發音</button>
+          <button type="button" onclick="event.stopPropagation(); speakJapaneseText('${res.hira.replace(/'/g, '')}', true)" class="tap-btn px-2.5 py-1.5 rounded-lg border border-[#1B365D] dark:border-blue-400 text-xs font-bold">🐢 慢速</button>
+        </div>
+      `;
+    };
+
+    const JP_CORE_GRAMMAR_REF_ZH = {
+      particles: [
+        { p: 'は (wa)', role: '主題助詞（提示句子主角：「至於…」）', ex: '私は学生です (Watashi wa gakusei desu)' },
+        { p: 'を (o)', role: '賓語／受詞助詞（動作直接作用的對象）', ex: '水を飲みます (Mizu o nomimasu)' },
+        { p: 'に / へ (ni / e)', role: '目的地、時間點或存在的場所', ex: '東京へ行きます (Toukyou e ikimasu)' },
+        { p: 'で (de)', role: '動作發生的場所、交通工具或支付手段', ex: '電車で行きます (Densha de ikimasu)' },
+        { p: 'の (no)', role: '所屬關係或名詞修飾（「的」）', ex: '日本の地図 (Nihon no chizu)' },
+        { p: 'から / まで (kara / made)', role: '時間或空間的起點與終點（「從…到…」）', ex: '九時から五時まで (Kuji kara goji made)' }
+      ],
+      politeness: [
+        { form: '丁寧語 (です / ます體)', cond: '日本旅遊、對店員、長輩或初次見面最安全禮貌的標準語體', ex: 'これをお願いします (Kore o onegaishimasu)' },
+        { form: '常體 / 普通形 (だ / 動詞原形)', cond: '熟識朋友、家人之間的非正式日常口語', ex: 'ありがとう / おはよう (Arigatou / Ohayou)' },
+        { form: '尊敬語・謙譲語 (高階敬語)', cond: '日本百貨、飯店櫃檯、餐廳店員對顧客常用的商務敬語', ex: 'いらっしゃいませ / かしこまりました' }
+      ],
+      wordOrder: [
+        '日語採用「SOV（主詞＋受詞＋動詞）」結構，核心動詞永遠放在句尾（例如：私は［主詞］ラーメンを［受詞］食べます［動詞］）。',
+        '日語疑問句不需要倒裝，只需在肯定句尾加上終助詞「か (ka)」並讀升調即可（例如：これはいくらですか）。',
+        '指示代名詞黃金「こそあど」三組：これ／ここ（離說話者近）、それ／そこ（離聽話者近）、あれ／あそこ（離雙方都遠）、どれ／どこ（疑問：哪個／哪裡）。'
+      ]
+    };
+
+    function switchConvViewSubTab(sub) {
+      convViewSubTab = sub;
+      const bDlg = document.getElementById('btnConvSubDlg');
+      const bGram = document.getElementById('btnConvSubGram');
+      if (bDlg && bGram) {
+        bDlg.className = sub === 'dlg' ? 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#1B365D] text-white' : 'px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300';
+        bGram.className = sub === 'gram' ? 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#1B365D] text-white' : 'px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300';
+      }
+      renderConversationSection();
+    }
+
+    const baseRenderConversationSection = renderConversationSection;
+    renderConversationSection = function() {
+      const container = document.getElementById('conversationDetailContainer');
+      const pillsBar = document.getElementById('convQuickPillsBar');
+      const ly = appState.layers || { romaji: true, native: true, hira: true, trans: true, notes: true };
+      const diaLabel = (appState.phoneticDialect === 'tw') ? '國語諧音' : '粵語諧音';
+
+      if (pillsBar) {
+        pillsBar.innerHTML = CURRICULUM.conversations.map((c, idx) => `
+          <button type="button" onclick="convViewSubTab='dlg'; selectConversationByIndex(${idx})" class="px-2 py-1 rounded-lg text-[11px] font-bold transition ${idx === appState.currentConvIndex && convViewSubTab === 'dlg' ? 'bg-[#D64045] text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'}">
+            L${idx + 1}${appState.completedLessons.includes(c.id) ? '✓' : ''}
+          </button>
+        `).join('');
+      }
+
+      if (convViewSubTab === 'gram' && container) {
+        container.innerHTML = `
+          <div class="space-y-4">
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 space-y-3">
+              <h3 class="font-bold text-base text-[#1B365D] dark:text-blue-300">1️⃣ 日語六大核心助詞總表 (Particles)</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                ${JP_CORE_GRAMMAR_REF_ZH.particles.map(pt => `
+                  <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-between gap-2">
+                    <div>
+                      <div class="font-bold text-sm text-[#D64045] jp-font">${pt.p}</div>
+                      <div class="text-slate-600 dark:text-slate-300">${pt.role}</div>
+                      <div class="font-semibold jp-font mt-1">${pt.ex}</div>
+                    </div>
+                    <button type="button" onclick="event.stopPropagation(); speakJapaneseText('${pt.ex.split('(')[0].trim()}', false)" class="px-2.5 py-1 rounded bg-[#1B365D] text-white font-bold shrink-0">🔊</button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 space-y-3">
+              <h3 class="font-bold text-base text-[#1B365D] dark:text-blue-300">2️⃣ 禮貌體（丁寧語）・常體・高階敬語比較</h3>
+              <div class="space-y-2 text-xs">
+                ${JP_CORE_GRAMMAR_REF_ZH.politeness.map(pl => `
+                  <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <span class="font-bold text-[#1B365D] dark:text-blue-300">${pl.form}</span> — <span>${pl.cond}</span>
+                    </div>
+                    <button type="button" onclick="event.stopPropagation(); speakJapaneseText('${pl.ex.split('/')[0].split('(')[0].trim()}', false)" class="px-2.5 py-1 rounded bg-emerald-700 text-white font-bold shrink-0">🔊 ${pl.ex}</button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 space-y-2 text-xs">
+              <h3 class="font-bold text-base text-[#1B365D] dark:text-blue-300">3️⃣ 日語語序（SOV）與指示代名詞（こそあど）法則</h3>
+              ${JP_CORE_GRAMMAR_REF_ZH.wordOrder.map(w => `<p class="text-slate-700 dark:text-slate-200">• ${w}</p>`).join('')}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      baseRenderConversationSection();
+      if (!container) return;
+
+      // Apply layer visibility & inject Cantonese/Mandarin phonetic guide into dialogue lines
+      const conv = CURRICULUM.conversations[appState.currentConvIndex];
+      if (!conv) return;
+      const lineCards = container.querySelectorAll('.space-y-3 > div.p-4.rounded-xl');
+      lineCards.forEach((card, idx) => {
+        const line = conv.lines[idx];
+        if (!line) return;
+        const allDivs = card.querySelectorAll('div');
+        allDivs.forEach(d => {
+          const txt = d.textContent || '';
+          if (txt.startsWith('平假名輔助：')) {
+            d.style.display = (ly.hira === false) ? 'none' : '';
+            if (ly.native !== false && !card.querySelector('.native-pron-line')) {
+              const pronEl = document.createElement('div');
+              pronEl.className = 'native-pron-line text-xs font-bold text-amber-700 dark:text-amber-300';
+              pronEl.textContent = `🗣️ ${diaLabel}：${computeChinesePronGuide(line.hira)}`;
+              d.insertAdjacentElement('afterend', pronEl);
+            }
+          } else if (txt.startsWith('中文翻譯：')) {
+            d.style.display = (ly.trans === false) ? 'none' : '';
+          } else if (txt.includes('要點解析：')) {
+            d.style.display = (ly.notes === false) ? 'none' : '';
+          }
+        });
+      });
+    };
+
     // Boot Application
     window.addEventListener('DOMContentLoaded', () => {
       loadState();
+      syncAidToolbarUI();
       if ('speechSynthesis' in window) {
         window.speechSynthesis.onvoiceschanged = checkTtsSupport;
       }
